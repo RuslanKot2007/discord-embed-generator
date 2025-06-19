@@ -18,7 +18,6 @@
 new Vue({
     el: '#app',
     data: {
-        cbxColor: false,
         embeds: [
             {
                 color: "#0099ff",
@@ -69,7 +68,6 @@ new Vue({
                 },
             },
         ],
-        selectedEmbedIndex: 0,
         webhookUrl: '',
         messageContent: '',
         username: '',
@@ -101,11 +99,6 @@ new Vue({
         draggable: window['vuedraggable'],
     },
 
-    computed: {
-        embed() {
-            return this.embeds[this.selectedEmbedIndex];
-        },
-    },
 
     methods: {
         fromMarkdown(str) {
@@ -213,72 +206,48 @@ new Vue({
             return /^#[0-9A-F]{6}$/i.test(hexCode);
         },
 
-        updateColor: function () {
-            this.cbxColor = true;
-            if (this.isValidHexCode(this.embed.color)) {
-                document.body.style.setProperty('--background-color', this.embed.color);
-            } else {
-                document.body.style.setProperty('--background-color', '#202225');
-            }
+        deleteField: function (embed, index) {
+            embed.fields.splice(index, 1);
         },
 
-        clearColor: function () {
-            this.$nextTick(() => {
-                this.embed.color = '';
-                document.body.style.setProperty('--background-color', '#202225');
-            });
-        },
-
-        deleteField: function (index) {
-            this.embed.fields.splice(index, 1);
-        },
-
-        addField: function () {
-            this.embed.fields.push({
+        addField: function (embed) {
+            embed.fields.push({
                 name: '\u200b',
                 value: '\u200b',
                 inline: false,
             });
         },
 
-        clearTimestamp: function (event) {
+        clearTimestamp: function (embed, event) {
             this.$nextTick(() => {
                 if (!event.target.checked) {
-                    this.embed.timestamp = '';
+                    embed.timestamp = '';
                 } else {
-                    this.embed.timestamp = new Date();
+                    embed.timestamp = new Date();
                 }
             });
         },
 
-        clearEmbed: function () {
-            for (let key of Object.keys(this.embed)) {
-                let value = this.embed[key];
+        clearEmbed: function (embed) {
+            for (let key of Object.keys(embed)) {
+                let value = embed[key];
                 if (typeof value == 'string') {
-                    this.embed[key] = '';
+                    embed[key] = '';
                 }
-                this.clearColor();
-                this.embed.author.name = '';
-                this.embed.author.icon_url = '';
-                this.embed.author.url = '';
-                this.embed.thumbnail.url = '';
-                this.embed.image.url = '';
-                this.embed.footer.text = '';
-                this.embed.footer.icon_url = '';
-                this.embed.timestamp = null;
-                this.embed.fields = [];
+                embed.author.name = '';
+                embed.author.icon_url = '';
+                embed.author.url = '';
+                embed.thumbnail.url = '';
+                embed.image.url = '';
+                embed.footer.text = '';
+                embed.footer.icon_url = '';
+                embed.timestamp = null;
+                embed.fields = [];
             }
 
             this.output = '';
         },
 
-        hoverField: function (index) {
-            document.querySelectorAll('.discord-embed .discord-embed-field')[index].classList.add('hovered');
-        },
-
-        blurField: function (index) {
-            document.querySelectorAll('.discord-embed .discord-embed-field')[index].classList.remove('hovered');
-        },
 
         addEmbed: function () {
             if (this.embeds.length >= 10) return;
@@ -294,27 +263,15 @@ new Vue({
                 timestamp: null,
                 footer: { text: '', icon_url: '' },
             });
-            this.selectedEmbedIndex = this.embeds.length - 1;
         },
 
         removeEmbed: function (index) {
             if (this.embeds.length <= 1) return;
             this.embeds.splice(index, 1);
-            if (this.selectedEmbedIndex >= this.embeds.length) {
-                this.selectedEmbedIndex = this.embeds.length - 1;
-            }
         },
 
-        nextEmbed: function () {
-            if (this.selectedEmbedIndex < this.embeds.length - 1) {
-                this.selectedEmbedIndex++;
-            }
-        },
-
-        prevEmbed: function () {
-            if (this.selectedEmbedIndex > 0) {
-                this.selectedEmbedIndex--;
-            }
+        clearAll: function () {
+            this.embeds.forEach((e) => this.clearEmbed(e));
         },
 
         copyToClipboard: function () {
@@ -354,81 +311,7 @@ new Vue({
             let toast = new bootstrap.Toast(toastEl);
             toast.show();
         },
-
-        // Added keyboard shortcut methods
-        handleKeyDown: function (event) {
-            if (event.ctrlKey && event.key.toLowerCase() === 'b') {
-                event.preventDefault();
-                this.wrapSelection('**');
-            } else if (event.ctrlKey && event.key.toLowerCase() === 'i') {
-                event.preventDefault();
-                this.wrapSelection('*');
-            } else if (event.ctrlKey && event.key.toLowerCase() === 'u') {
-                event.preventDefault();
-                this.wrapSelection('__');
-            } else if (event.ctrlKey && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                this.wrapSelection('~~');
-            } else if (event.ctrlKey && event.key === '`') {
-                event.preventDefault();
-                this.wrapSelection('`');
-            }
-            // Add more shortcuts as needed
-        },
-
-        wrapSelection: function (wrapper) {
-            const textarea = this.$refs.descriptionInput;
-            let start = textarea.selectionStart;
-            let end = textarea.selectionEnd;
-            let text = textarea.value;
-            let selectedText = text.slice(start, end);
-    
-            // Check if the selection includes the wrapper at the start and end
-            if (selectedText.startsWith(wrapper) && selectedText.endsWith(wrapper)) {
-                // Remove wrapper from selection
-                selectedText = selectedText.slice(wrapper.length, selectedText.length - wrapper.length);
-                const newText = text.slice(0, start) + selectedText + text.slice(end);
-                textarea.value = newText;
-                this.embed.description = newText;
-                // Update cursor positions
-                textarea.selectionStart = start;
-                textarea.selectionEnd = end - 2 * wrapper.length;
-            } else if (
-                text.slice(start - wrapper.length, start) === wrapper &&
-                text.slice(end, end + wrapper.length) === wrapper
-            ) {
-                // Remove wrapper outside selection
-                const newText =
-                    text.slice(0, start - wrapper.length) +
-                    selectedText +
-                    text.slice(end + wrapper.length);
-                textarea.value = newText;
-                this.embed.description = newText;
-                // Update cursor positions
-                textarea.selectionStart = start - wrapper.length;
-                textarea.selectionEnd = end - wrapper.length;
-            } else {
-                // Add wrapper
-                const newText =
-                    text.slice(0, start) + wrapper + selectedText + wrapper + text.slice(end);
-                textarea.value = newText;
-                this.embed.description = newText;
-                // Update the cursor position
-                textarea.selectionStart = start + wrapper.length;
-                textarea.selectionEnd = end + wrapper.length;
-            }
-        },
     },
 
-    created: function () {
-        this.updateColor('#0099ff');
-    },
-
-    mounted: function () {
-        // Add event listener for keyboard shortcuts
-        const textarea = this.$refs.descriptionInput;
-        if (textarea) {
-            textarea.addEventListener('keydown', this.handleKeyDown);
-        }
-    },
+    mounted: function () {},
 });
