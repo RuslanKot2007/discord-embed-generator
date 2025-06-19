@@ -19,54 +19,61 @@ new Vue({
     el: '#app',
     data: {
         cbxColor: false,
-        embed: {
-            color: "#0099ff",
-            title: 'This is the title',
-            url: 'https://discord.js.org',
-            author: {
-                name: 'Kater-Bot',
-                icon_url: 'https://katerlol.github.io/discord-embed-generator/img/katerbot-pfp.webp',
+        embeds: [
+            {
+                color: "#0099ff",
+                title: 'This is the title',
                 url: 'https://discord.js.org',
+                author: {
+                    name: 'Kater-Bot',
+                    icon_url: 'https://katerlol.github.io/discord-embed-generator/img/katerbot-pfp.webp',
+                    url: 'https://discord.js.org',
+                },
+                description: '*This* ~~is~~ the **description**',
+                thumbnail: {
+                    url: 'https://picsum.photos/200/200',
+                },
+                fields: [
+                    {
+                        name: 'Regular field Title',
+                        value: 'Some value here',
+                    },
+                    {
+                        name: '\u200b',
+                        value: '\u200b',
+                        inline: false,
+                    },
+                    {
+                        name: 'Inline field title',
+                        value: 'Some value here',
+                        inline: true,
+                    },
+                    {
+                        name: 'Inline field title',
+                        value: 'Some value here',
+                        inline: true,
+                    },
+                    {
+                        name: 'Inline field title',
+                        value: 'Some value here',
+                        inline: true,
+                    },
+                ],
+                image: {
+                    url: 'https://picsum.photos/500/500',
+                },
+                timestamp: new Date(),
+                footer: {
+                    text: 'Some footer text here',
+                    icon_url: 'https://katerlol.github.io/discord-embed-generator/img/katerbot-pfp.webp',
+                },
             },
-            description: '*This* ~~is~~ the **description**',
-            thumbnail: {
-                url: 'https://picsum.photos/200/200',
-            },
-            fields: [
-                {
-                    name: 'Regular field Title',
-                    value: 'Some value here',
-                },
-                {
-                    name: '\u200b',
-                    value: '\u200b',
-                    inline: false,
-                },
-                {
-                    name: 'Inline field title',
-                    value: 'Some value here',
-                    inline: true,
-                },
-                {
-                    name: 'Inline field title',
-                    value: 'Some value here',
-                    inline: true,
-                },
-                {
-                    name: 'Inline field title',
-                    value: 'Some value here',
-                    inline: true,
-                },
-            ],
-            image: {
-                url: 'https://picsum.photos/500/500',
-            },
-            timestamp: new Date(),
-            footer: {
-                text: 'Some footer text here',
-                icon_url: 'https://katerlol.github.io/discord-embed-generator/img/katerbot-pfp.webp',
-            },
-        },
+        ],
+        selectedEmbedIndex: 0,
+        webhookUrl: '',
+        messageContent: '',
+        username: '',
+        avatarUrl: '',
 
         rules: [
             // Bold, italics, and paragraph rules
@@ -94,6 +101,12 @@ new Vue({
         draggable: window['vuedraggable'],
     },
 
+    computed: {
+        embed() {
+            return this.embeds[this.selectedEmbedIndex];
+        },
+    },
+
     methods: {
         fromMarkdown(str) {
             let preview = str;
@@ -117,42 +130,83 @@ new Vue({
             return res !== null;
         },
 
-        toEmbedStr: function () {
-            const embedToPrint = Object.assign({}, this.embed);
+        sanitizeEmbed: function(embed) {
+            const embedToPrint = JSON.parse(JSON.stringify(embed));
 
-            for (let i = 0; i < embedToPrint.fields; i++) {
+            for (let i = 0; i < embedToPrint.fields.length; i++) {
                 embedToPrint.fields[i].name = embedToPrint.fields[i].name
                     ? embedToPrint.fields[i].name.trim()
-                    : '\\u200b';
+                    : '\u200b';
                 embedToPrint.fields[i].value = embedToPrint.fields[i].value
                     ? embedToPrint.fields[i].value.trim()
-                    : '\\u200b';
+                    : '\u200b';
             }
 
             for (let key of Object.keys(embedToPrint)) {
-                let value = embedToPrint[key];
-                if (value == null || value == '') {
+                const value = embedToPrint[key];
+                if (value == null || value === '') {
                     delete embedToPrint[key];
                 }
             }
 
             if (
+                embedToPrint.author &&
                 embedToPrint.author.name === '' &&
                 embedToPrint.author.icon_url === '' &&
                 embedToPrint.author.url === ''
             )
                 delete embedToPrint.author;
 
-            if (embedToPrint.thumbnail.url === '') delete embedToPrint.thumbnail;
+            if (embedToPrint.thumbnail && embedToPrint.thumbnail.url === '')
+                delete embedToPrint.thumbnail;
 
-            if (embedToPrint.image.url === '') delete embedToPrint.image;
+            if (embedToPrint.image && embedToPrint.image.url === '')
+                delete embedToPrint.image;
 
-            if (embedToPrint.footer.text === '' && embedToPrint.footer.icon_url === '')
+            if (
+                embedToPrint.footer &&
+                embedToPrint.footer.text === '' &&
+                embedToPrint.footer.icon_url === ''
+            )
                 delete embedToPrint.footer;
 
-            console.log(`!richembed post ${JSON.stringify(embedToPrint)}`);
-            this.output = JSON.stringify(embedToPrint);
-            return JSON.stringify(embedToPrint);
+            return embedToPrint;
+        },
+
+        buildMessage: function() {
+            const embeds = this.embeds.map((e) => this.sanitizeEmbed(e));
+            const message = { embeds };
+            if (this.messageContent) message.content = this.messageContent;
+            if (this.username) message.username = this.username;
+            if (this.avatarUrl) message.avatar_url = this.avatarUrl;
+            return message;
+        },
+
+        toEmbedStr: function() {
+            const message = this.buildMessage();
+            this.output = JSON.stringify(message);
+            return this.output;
+        },
+
+        sendWebhook: function() {
+            if (!this.webhookUrl) {
+                this.showToast('errorToast');
+                return;
+            }
+            const payload = this.buildMessage();
+            fetch(this.webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            })
+                .then((res) => {
+                    if (res.ok) {
+                        this.showToast('successToast');
+                    } else {
+                        this.showToast('errorToast');
+                    }
+                })
+                .catch(() => this.showToast('errorToast'));
         },
 
         isValidHexCode: function (hexCode) {
@@ -224,6 +278,43 @@ new Vue({
 
         blurField: function (index) {
             document.querySelectorAll('.discord-embed .discord-embed-field')[index].classList.remove('hovered');
+        },
+
+        addEmbed: function () {
+            if (this.embeds.length >= 10) return;
+            this.embeds.push({
+                color: '',
+                title: '',
+                url: '',
+                author: { name: '', icon_url: '', url: '' },
+                description: '',
+                thumbnail: { url: '' },
+                fields: [],
+                image: { url: '' },
+                timestamp: null,
+                footer: { text: '', icon_url: '' },
+            });
+            this.selectedEmbedIndex = this.embeds.length - 1;
+        },
+
+        removeEmbed: function (index) {
+            if (this.embeds.length <= 1) return;
+            this.embeds.splice(index, 1);
+            if (this.selectedEmbedIndex >= this.embeds.length) {
+                this.selectedEmbedIndex = this.embeds.length - 1;
+            }
+        },
+
+        nextEmbed: function () {
+            if (this.selectedEmbedIndex < this.embeds.length - 1) {
+                this.selectedEmbedIndex++;
+            }
+        },
+
+        prevEmbed: function () {
+            if (this.selectedEmbedIndex > 0) {
+                this.selectedEmbedIndex--;
+            }
         },
 
         copyToClipboard: function () {
