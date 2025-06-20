@@ -106,7 +106,7 @@
         </h2>
         <div id="collapseEmbeds" class="accordion-collapse collapse show" aria-labelledby="headingEmbeds">
             <div class="accordion-body">
-                <div class="accordion" id="accordionEmbeds">
+                    <div class="accordion" id="accordionEmbeds">
                     <div class="accordion-item" v-for="(embed, idx) in embeds" :key="idx">
                         <h2 class="accordion-header" :id="`headingEmbed${idx}`">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -198,41 +198,41 @@
                                         <div class="accordion-body">
                                             <div class="fields">
                                                 <draggable v-model="embed.fields" handle=".drag-handle" @start="drag=true" @end="drag=false">
-                                                    <template v-for="(field, index) in embed.fields" :key="index">
+                                                    <template v-for="(field, fidx) in embed.fields" :key="fidx">
                                                         <div class="accordion-item mb-2">
-                                                            <h2 class="accordion-header" :id="`headingField${idx}-${index}`">
+                                                            <h2 class="accordion-header" :id="`headingField${idx}-${fidx}`">
                                                                 <button class="accordion-button collapsed drag-handle" type="button" data-bs-toggle="collapse"
-                                                                    :data-bs-target="`#collapseField${idx}-${index}`" aria-expanded="false"
-                                                                    :aria-controls="`collapseField${idx}-${index}`">
-                                                                    Field {{ index + 1 }}
+                                                                    :data-bs-target="`#collapseField${idx}-${fidx}`" aria-expanded="false"
+                                                                    :aria-controls="`collapseField${idx}-${fidx}`">
+                                                                    Field {{ fidx + 1 }}
                                                                 </button>
                                                             </h2>
-                                                            <div :id="`collapseField${idx}-${index}`" class="accordion-collapse collapse">
+                                                            <div :id="`collapseField${idx}-${fidx}`" class="accordion-collapse collapse">
                                                                 <div class="accordion-body">
                                                                     <div class="form-group row mb-2">
-                                                                        <label :for="`field-name-${idx}-${index}`" class="col-3 col-form-label">Field Name</label>
+                                                                        <label :for="`field-name-${idx}-${fidx}`" class="col-3 col-form-label">Field Name</label>
                                                                         <div class="col-9">
-                                                                            <input :name="`field-name-${idx}-${index}`" :id="`field-name-${idx}-${index}`" placeholder="Embed Name" v-model="field.name" type="text" class="form-control">
+                                                                            <input :name="`field-name-${idx}-${fidx}`" :id="`field-name-${idx}-${fidx}`" placeholder="Embed Name" v-model="field.name" type="text" class="form-control">
                                                                         </div>
                                                                     </div>
                                                                     <div class="form-group row mb-2">
-                                                                        <label :for="`field-value-${idx}-${index}`" class="col-3 col-form-label">Field Value</label>
+                                                                        <label :for="`field-value-${idx}-${fidx}`" class="col-3 col-form-label">Field Value</label>
                                                                         <div class="col-9">
-                                                                            <textarea :name="`field-value-${idx}-${index}`" :id="`field-value-${idx}-${index}`" cols="40" rows="2" v-model="field.value" class="form-control">{{ field.value }}</textarea>
+                                                                            <textarea :name="`field-value-${idx}-${fidx}`" :id="`field-value-${idx}-${fidx}`" cols="40" rows="2" v-model="field.value" class="form-control">{{ field.value }}</textarea>
                                                                         </div>
                                                                     </div>
                                                                     <div class="row mb-2">
                                                                         <div class="col-9 offset-3">
                                                                             <div class="form-check">
-                                                                                <input class="form-check-input" type="checkbox" :name="`field-inline-${idx}-${index}`" :id="`field-inline-${idx}-${index}`" v-model="field.inline">
-                                                                                <label class="form-check-label" :for="`field-inline-${idx}-${index}`">
+<input class="form-check-input" type="checkbox" :name="`field-inline-${idx}-${fidx}`" :id="`field-inline-${idx}-${fidx}`" v-model="field.inline">
+<label class="form-check-label" :for="`field-inline-${idx}-${fidx}`">
                                                                                     Display inline
                                                                                 </label>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                     <div class="text-end">
-                                                                        <button class="btn btn-link btn-sm text-danger" type="button" @click="deleteField(embed, index)">Delete</button>
+                                                                        <button class="btn btn-link btn-sm text-danger" type="button" @click="deleteField(embed, fidx)">Delete</button>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -321,7 +321,7 @@
         <div id="collapseComponents" class="accordion-collapse collapse" aria-labelledby="headingComponents">
             <div class="accordion-body">
                 <div class="accordion" id="accordionComponents">
-                    <component-form v-for="(comp, cidx) in components" :key="cidx" :comp="comp" :index="cidx" :parent="components"></component-form>
+                    <component-form v-for="(comp, cidx) in components" :key="cidx" :comp="comp" :idx="cidx" :parent="components"></component-form>
                     <div class="mt-2">
                         <button class="btn btn-success" type="button" @click="addComponent()" :disabled="components.length >= 40">Add Component</button>
                     </div>
@@ -451,7 +451,7 @@
         <div class="accordion-item">
             <h2 class="accordion-header" :id="`headingComp${uid}`">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="`#collapseComp${uid}`" aria-expanded="false" :aria-controls="`collapseComp${uid}`">
-                    Component {{ index + 1 }}
+                    Component {{ idx + 1 }}
                 </button>
             </h2>
             <div :id="`collapseComp${uid}`" class="accordion-collapse collapse">
@@ -493,7 +493,7 @@
                         </div>
                     </div>
                     <div v-if="comp.type === 1" class="ms-3">
-                        <component-form v-for="(child, cidx) in comp.components" :key="cidx" :comp="child" :index="cidx" :parent="comp.components"></component-form>
+                        <component-form v-for="(child, cidx) in comp.components" :key="cidx" :comp="child" :idx="cidx" :parent="comp.components"></component-form>
                         <button class="btn btn-success btn-sm mt-2" type="button" @click="addChild">Add Child</button>
                     </div>
                     <div class="text-end mt-2">

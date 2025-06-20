@@ -17,7 +17,7 @@
 
 Vue.component('component-form', {
     template: '#component-form-template',
-    props: ['comp', 'index', 'parent'],
+    props: ['comp', 'idx', 'parent'],
     computed: {
         uid() {
             return this._uid;
@@ -25,7 +25,7 @@ Vue.component('component-form', {
     },
     methods: {
         remove() {
-            this.parent.splice(this.index, 1);
+            this.parent.splice(this.idx, 1);
         },
         addChild() {
             if (!this.comp.components) this.$set(this.comp, 'components', []);
@@ -279,8 +279,8 @@ new Vue({
             return /^#[0-9A-F]{6}$/i.test(hexCode);
         },
 
-        deleteField: function (embed, index) {
-            embed.fields.splice(index, 1);
+        deleteField: function (embed, idx) {
+            embed.fields.splice(idx, 1);
         },
 
         addField: function (embed) {
