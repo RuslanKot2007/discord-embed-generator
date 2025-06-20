@@ -321,7 +321,7 @@
         <div id="collapseComponents" class="accordion-collapse collapse" aria-labelledby="headingComponents">
             <div class="accordion-body">
                 <div class="accordion" id="accordionComponents">
-                    <component-form v-for="(comp, cidx) in components" :key="cidx" :comp="comp" :parent="components"></component-form>
+                    <component-form v-for="(comp, cidx) in components" :key="cidx" :comp="comp" :parent="components" :idx="cidx"></component-form>
                     <div class="mt-2">
                         <button class="btn btn-success" type="button" @click="addComponent()" :disabled="components.length >= 40">Add Component</button>
                     </div>
@@ -493,7 +493,7 @@
                         </div>
                     </div>
                     <div v-if="comp.type === 1" class="ms-3">
-                        <component-form v-for="(child, cidx) in comp.components" :key="cidx" :comp="child" :parent="comp.components"></component-form>
+                        <component-form v-for="(child, cidx) in comp.components" :key="cidx" :comp="child" :parent="comp.components" :idx="cidx"></component-form>
                         <button class="btn btn-success btn-sm mt-2" type="button" @click="addChild">Add Child</button>
                     </div>
                     <div class="text-end mt-2">
