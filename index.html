@@ -321,21 +321,7 @@
         <div id="collapseComponents" class="accordion-collapse collapse" aria-labelledby="headingComponents">
             <div class="accordion-body">
                 <div class="accordion" id="accordionComponents">
-                    <div class="accordion-item" v-for="(comp, cidx) in components" :key="cidx">
-                        <h2 class="accordion-header" :id="`headingComponent${cidx}`">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="`#collapseComponent${cidx}`" aria-expanded="false" :aria-controls="`collapseComponent${cidx}`">
-                                Component {{ cidx + 1 }}
-                            </button>
-                        </h2>
-                        <div :id="`collapseComponent${cidx}`" class="accordion-collapse collapse">
-                            <div class="accordion-body">
-                                <textarea class="form-control" rows="3" v-model="comp.json" placeholder='{"type":1,"components":[{"type":2,"style":1,"label":"Button","custom_id":"id"}]}'></textarea>
-                                <div class="text-end mt-2">
-                                    <button class="btn btn-link text-danger btn-sm" type="button" @click="deleteComponent(cidx)">Delete</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <component-form v-for="(comp, cidx) in components" :key="cidx" :comp="comp" :index="cidx" :parent="components"></component-form>
                     <div class="mt-2">
                         <button class="btn btn-success" type="button" @click="addComponent()" :disabled="components.length >= 40">Add Component</button>
                     </div>
@@ -461,6 +447,62 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.8.4/Sortable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Vue.Draggable/2.20.0/vuedraggable.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script type="text/x-template" id="component-form-template">
+        <div class="accordion-item">
+            <h2 class="accordion-header" :id="`headingComp${index}`">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" :data-bs-target="`#collapseComp${index}`" aria-expanded="false" :aria-controls="`collapseComp${index}`">
+                    Component {{ index + 1 }}
+                </button>
+            </h2>
+            <div :id="`collapseComp${index}`" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <div class="mb-2">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" v-model.number="comp.type">
+                            <option :value="1">Action Row</option>
+                            <option :value="2">Button</option>
+                            <option :value="10">Text Display</option>
+                        </select>
+                    </div>
+                    <div v-if="comp.type === 10" class="mb-2">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" rows="2" v-model="comp.content"></textarea>
+                    </div>
+                    <div v-if="comp.type === 2" class="mb-2">
+                        <label class="form-label">Label</label>
+                        <input type="text" class="form-control mb-2" v-model="comp.label">
+                        <label class="form-label">Style</label>
+                        <select class="form-select mb-2" v-model.number="comp.style">
+                            <option :value="1">Primary</option>
+                            <option :value="2">Secondary</option>
+                            <option :value="3">Success</option>
+                            <option :value="4">Danger</option>
+                            <option :value="5">Link</option>
+                        </select>
+                        <div v-if="comp.style == 5" class="mb-2">
+                            <label class="form-label">URL</label>
+                            <input type="text" class="form-control" v-model="comp.url">
+                        </div>
+                        <div v-else class="mb-2">
+                            <label class="form-label">Custom ID</label>
+                            <input type="text" class="form-control" v-model="comp.custom_id">
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" :id="`disabled-${index}`" v-model="comp.disabled">
+                            <label class="form-check-label" :for="`disabled-${index}`">Disabled</label>
+                        </div>
+                    </div>
+                    <div v-if="comp.type === 1" class="ms-3">
+                        <component-form v-for="(child, cidx) in comp.components" :key="cidx" :comp="child" :index="cidx" :parent="comp.components"></component-form>
+                        <button class="btn btn-success btn-sm mt-2" type="button" @click="$parent.addComponent(comp.components)">Add Child</button>
+                    </div>
+                    <div class="text-end mt-2">
+                        <button class="btn btn-link text-danger btn-sm" type="button" @click="remove">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
     <script src="index.js"></script>
 </body>
 </html>

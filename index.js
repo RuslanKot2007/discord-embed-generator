@@ -15,6 +15,16 @@
     along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+Vue.component('component-form', {
+    template: '#component-form-template',
+    props: ['comp', 'index', 'parent'],
+    methods: {
+        remove() {
+            this.parent.splice(this.index, 1);
+        }
+    }
+});
+
 new Vue({
     el: '#app',
     data: {
@@ -179,6 +189,30 @@ new Vue({
             return embedToPrint;
         },
 
+        sanitizeComponent: function(comp) {
+            const out = JSON.parse(JSON.stringify(comp));
+            if ([1, 9, 17].includes(out.type)) {
+                out.components = (out.components || [])
+                    .map(c => this.sanitizeComponent(c))
+                    .filter(c => Object.keys(c).length);
+                if (!out.components.length) delete out.components;
+            }
+            if (out.type === 17 && out.accent_color) {
+                if (this.isValidHexCode(out.accent_color)) {
+                    out.accent_color = parseInt(out.accent_color.replace('#',''),16);
+                } else {
+                    delete out.accent_color;
+                }
+            }
+            if (out.type === 2 && !out.disabled) delete out.disabled;
+            for (let key of Object.keys(out)) {
+                if (out[key] === '' || out[key] == null || (Array.isArray(out[key]) && !out[key].length)) {
+                    delete out[key];
+                }
+            }
+            return out;
+        },
+
         buildMessage: function() {
             const embeds = this.embeds.map((e) => this.sanitizeEmbed(e));
             const message = { embeds };
@@ -187,10 +221,8 @@ new Vue({
             if (this.avatarUrl) message.avatar_url = this.avatarUrl;
 
             const comps = this.components
-                .map(c => {
-                    try { return JSON.parse(c.json); } catch (_) { return null; }
-                })
-                .filter(c => c);
+                .map(c => this.sanitizeComponent(c))
+                .filter(c => Object.keys(c).length);
             if (comps.length) {
                 message.components = comps;
                 message.flags = 1 << 15;
@@ -293,13 +325,14 @@ new Vue({
             });
         },
 
-        addComponent: function () {
-            if (this.components.length >= 40) return;
-            this.components.push({ json: '' });
+        addComponent: function (target) {
+            const list = target || this.components;
+            if (list.length >= 40) return;
+            list.push({ type: 10, content: '', components: [] });
         },
 
-        deleteComponent: function(index) {
-            this.components.splice(index, 1);
+        deleteComponent: function(list, index) {
+            list.splice(index, 1);
         },
 
         removeEmbed: function (index) {
