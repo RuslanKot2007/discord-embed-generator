@@ -72,6 +72,7 @@ new Vue({
         messageContent: '',
         username: '',
         avatarUrl: '',
+        threadId: '',
 
         rules: [
             // Bold, italics, and paragraph rules
@@ -187,7 +188,12 @@ new Vue({
                 return;
             }
             const payload = this.buildMessage();
-            fetch(this.webhookUrl, {
+            let url = this.webhookUrl;
+            if (this.threadId) {
+                url += (url.includes('?') ? '&' : '?') +
+                    'thread_id=' + encodeURIComponent(this.threadId);
+            }
+            fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
