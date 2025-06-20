@@ -164,6 +164,17 @@ new Vue({
             )
                 delete embedToPrint.footer;
 
+            if (typeof embedToPrint.color === 'string' && embedToPrint.color) {
+                if (this.isValidHexCode(embedToPrint.color)) {
+                    embedToPrint.color = parseInt(
+                        embedToPrint.color.replace('#', ''),
+                        16
+                    );
+                } else {
+                    delete embedToPrint.color;
+                }
+            }
+
             return embedToPrint;
         },
 
