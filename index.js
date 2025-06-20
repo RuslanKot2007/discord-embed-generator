@@ -17,10 +17,10 @@
 
 Vue.component('component-form', {
     template: '#component-form-template',
-    props: ['comp', 'index', 'parent'],
+    props: ['comp', 'idx', 'parent'],
     methods: {
         remove() {
-            this.parent.splice(this.index, 1);
+            this.parent.splice(this.idx, 1);
         }
     }
 });
