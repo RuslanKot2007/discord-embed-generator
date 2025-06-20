@@ -73,6 +73,7 @@ new Vue({
         username: '',
         avatarUrl: '',
         threadId: '',
+        components: [],
 
         rules: [
             // Bold, italics, and paragraph rules
@@ -184,6 +185,16 @@ new Vue({
             if (this.messageContent) message.content = this.messageContent;
             if (this.username) message.username = this.username;
             if (this.avatarUrl) message.avatar_url = this.avatarUrl;
+
+            const comps = this.components
+                .map(c => {
+                    try { return JSON.parse(c.json); } catch (_) { return null; }
+                })
+                .filter(c => c);
+            if (comps.length) {
+                message.components = comps;
+                message.flags = 1 << 15;
+            }
             return message;
         },
 
@@ -282,6 +293,15 @@ new Vue({
             });
         },
 
+        addComponent: function () {
+            if (this.components.length >= 40) return;
+            this.components.push({ json: '' });
+        },
+
+        deleteComponent: function(index) {
+            this.components.splice(index, 1);
+        },
+
         removeEmbed: function (index) {
             if (this.embeds.length <= 1) return;
             this.embeds.splice(index, 1);
@@ -289,6 +309,7 @@ new Vue({
 
         clearAll: function () {
             this.embeds.forEach((e) => this.clearEmbed(e));
+            this.components = [];
         },
 
         copyToClipboard: function () {
