@@ -17,12 +17,15 @@
 
 Vue.component('component-form', {
     template: '#component-form-template',
-    props: ['comp', 'parent'],
+    props: ['comp', 'parent', 'index'],
     computed: {
         uid() {
             return this._uid;
         },
         idx() {
+            if (typeof this.index === 'number') {
+                return this.index;
+            }
             return this.parent.indexOf(this.comp);
         }
     },
