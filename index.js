@@ -17,13 +17,10 @@
 
 Vue.component('component-form', {
     template: '#component-form-template',
-    props: ['comp', 'parent'],
+    props: ['comp', 'parent', 'idx'],
     computed: {
         uid() {
             return this._uid;
-        },
-        idx() {
-            return this.parent.indexOf(this.comp);
         }
     },
     methods: {
