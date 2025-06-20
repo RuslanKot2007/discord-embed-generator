@@ -17,10 +17,20 @@
 
 Vue.component('component-form', {
     template: '#component-form-template',
-    props: ['comp', 'idx', 'parent'],
+    props: ['comp', 'index', 'parent'],
+    computed: {
+        uid() {
+            return this._uid;
+        }
+    },
     methods: {
         remove() {
-            this.parent.splice(this.idx, 1);
+            this.parent.splice(this.index, 1);
+        },
+        addChild() {
+            if (!this.comp.components) this.$set(this.comp, 'components', []);
+            if (this.comp.components.length >= 40) return;
+            this.comp.components.push({ type: 10, content: '', components: [] });
         }
     }
 });
@@ -246,6 +256,9 @@ new Vue({
             if (this.threadId) {
                 url += (url.includes('?') ? '&' : '?') +
                     'thread_id=' + encodeURIComponent(this.threadId);
+            }
+            if (payload.components) {
+                url += (url.includes('?') ? '&' : '?') + 'with_components=true';
             }
             fetch(url, {
                 method: 'POST',
